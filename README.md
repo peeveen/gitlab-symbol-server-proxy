@@ -14,12 +14,13 @@ In the Visual Studio Options dialog (Tools → Options), add the URL of this web
 
 When debugging, Visual Studio will now start asking this webservice for PDBs that it cannot find locally.
 
-When a request arrives (e.g. for `Foo.Bar.pdb`):
+These requests will contain a name (e.g. `Foo.Bar.pdb`) and a hex-string "hash" that serves as a sort-of version identifier.
 
 1. The webservice will search within the package registries of all projects in all top-level GitLab groups for packages that match the name `Foo.Bar`.
 2. From these, it will look for any files in that package that have a `.snupkg` extension.
-3. Then it will download these `.snupkg` files and extract any PDB files. These will be cached locally.
-4. If the internal GUID of any of those PDBs matches the "hash" part of the request, then that PDB is streamed back to Visual Studio.
+3. Then it will download these `.snupkg` files and extract any PDB files. These will be cached locally to improve future performance.
+4. An internal GUID is read from each PDB, and used to create a "hash" string.
+5. If any of these match the "hash" part of the request, then the matching PDB is streamed back to Visual Studio.
 
 ## Build
 
