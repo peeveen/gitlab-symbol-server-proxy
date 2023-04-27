@@ -84,3 +84,4 @@ Any other property from the `appsettings.yml` file can also be supplied via comm
 
 - Unit tests!
 - Decouple PDB cache data and storage.
+- Work with native PDBs (currently only portable supported).
