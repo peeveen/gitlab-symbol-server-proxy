@@ -3,8 +3,9 @@ using LanguageExt;
 namespace GitLabSymbolServerProxy;
 
 public interface IPdbCache {
-	Task AddPdbFromSnupkgContent(string name, Stream snupkgContent);
-	Option<IList<string>> GetPdbHashes(string name, string snupkgHash);
-	Option<string> GetPdbPath(string name, string pdbHash);
+	Task StorePdbs(IEnumerable<PdbStream> pdbs);
+	bool IsSnupkgKnown(SnupkgStream snupkgStream);
+	void RegisterSnupkgs(IEnumerable<SnupkgStream> snupkgs);
+	Task<Option<Stream>> GetPdb(string name, string pdbHash);
 	void Clear();
 }

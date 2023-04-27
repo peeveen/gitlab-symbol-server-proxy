@@ -39,20 +39,19 @@ public class GitLabClient : IGitLabClient {
 			return packageFiles;
 		});
 
-	public async Task<Try<IEnumerable<GitLabSymbolPackage>>> GetSnupkgsByName(string name) =>
-		await TryAsync(async () => {
-			// Get all top-level groups.
-			var getTopLevelGroupsRequestUri = new Uri(new Uri(_config.GitLabHostOrigin), "api/v4/groups?top_level_only=true");
-			var groups = await ExecutePaginatedRequest<GitLabGroup>(getTopLevelGroupsRequestUri, _config.PersonalAccessToken).IfFailThrow();
-			var tryPackageFiles = await groups.Map(group => GetSnupkgFilesFromGroup(name, group.Id)).TraverseParallel(x => x);
-			var packageFiles = tryPackageFiles.Aggregate().IfFailThrow().SelectMany(x => x);
-			return packageFiles;
-		});
+	public async Task<IEnumerable<GitLabSymbolPackage>> GetSnupkgsByName(string name) {
+		// Get all top-level groups.
+		var getTopLevelGroupsRequestUri = new Uri(new Uri(_config.GitLabHostOrigin), "api/v4/groups?top_level_only=true");
+		var groups = await ExecutePaginatedRequest<GitLabGroup>(getTopLevelGroupsRequestUri, _config.PersonalAccessToken).IfFailThrow();
+		var tryPackageFiles = await groups.Map(group => GetSnupkgFilesFromGroup(name, group.Id)).TraverseParallel(x => x);
+		var packageFiles = tryPackageFiles.Aggregate().IfFailThrow().SelectMany(x => x);
+		return packageFiles;
+	}
 
-	public async Task<Stream> GetSnupkgStream(string projectId, string packageName, string packageVersion, string packageFilename) {
+	public async Task<SnupkgStream> GetSnupkgStream(string projectId, string packageName, string packageVersion, string packageFilename) {
 		var downloadNuGetPackageUri = new Uri(new Uri(_config.GitLabHostOrigin), $"api/v4/projects/{projectId}/packages/nuget/download/{packageName}/{packageVersion}/{packageFilename}");
 		var response = await MakeApiRequest(HttpMethod.Get, downloadNuGetPackageUri, _config.PersonalAccessToken, _config.UserName);
-		return await response.Content.ReadAsStreamAsync();
+		return new SnupkgStream(await response.Content.ReadAsStreamAsync(), packageFilename, packageName, packageVersion);
 	}
 
 	private static string Base64Encode(string str) => Convert.ToBase64String(Encoding.UTF8.GetBytes(str));

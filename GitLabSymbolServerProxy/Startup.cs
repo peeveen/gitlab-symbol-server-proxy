@@ -15,7 +15,8 @@ public class Startup {
 	public void ConfigureServices(IServiceCollection services) {
 		var proxyConfig = new ProxyConfig(Configuration);
 		services.AddSingleton<IProxyConfig>(proxyConfig);
-		services.AddSingleton<IPdbCache>(new PdbCache(proxyConfig.CacheRootPath));
+		var pdbStore = new FileSystemPdbStore(proxyConfig);
+		services.AddSingleton<IPdbCache>(new PdbCache(pdbStore));
 
 		services.AddHttpClient<IGitLabClient, GitLabClient>(client => {
 			client.BaseAddress = new Uri(proxyConfig.GitLabHostOrigin);
@@ -30,7 +31,7 @@ public class Startup {
 	}
 
 	// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-	public void Configure(IApplicationBuilder app, ILoggerFactory loggerFactory) {
+	public void Configure(IApplicationBuilder app) {
 		app.UseHttpExceptions();
 		app.UseRouting();
 		if (IsDevelopment)
