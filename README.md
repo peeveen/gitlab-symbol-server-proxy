@@ -1,6 +1,6 @@
 # GitLab symbol server proxy
 
-[Available from DockerHub](https://hub.docker.com/r/peeveen/GitLabSymbolServerProxy)
+[Available from DockerHub](https://hub.docker.com/r/peeveen/gitlabsymbolserverproxy)
 
 Recently, GitLab allowed `snupkg` files to be pushed to the internal NuGet registry. This was great news!
 
