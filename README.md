@@ -16,7 +16,7 @@ When debugging, Visual Studio will now start asking this webservice for PDBs tha
 
 When a request arrives (e.g. for `Foo.Bar.pdb`):
 
-1. the webservice will search within the package registries of all projects in all top-level GitLab groups for packages that match the name `Foo.Bar`.
+1. The webservice will search within the package registries of all projects in all top-level GitLab groups for packages that match the name `Foo.Bar`.
 2. From these, it will look for any files in that package that have a `.snupkg` extension.
 3. Then it will download these `.snupkg` files and extract any PDB files. These will be cached locally.
 4. If the internal GUID of any of those PDBs matches the "hash" part of the request, then that PDB is streamed back to Visual Studio.
