@@ -4,7 +4,7 @@
 
 Recently, GitLab allowed `snupkg` files to be pushed to the internal NuGet registry. This was great news!
 
-However, GitLab itself does not yet function as a symbol server, so nothing can really consume the symbol information in those packages. This is terrible news!
+However, [GitLab itself does not yet function as a symbol server](https://gitlab.com/gitlab-org/gitlab/-/issues/342157), so nothing can really consume the symbol information in those packages. This is terrible news!
 
 This project is a webservice that can run alongside GitLab and serve the symbol information from those packages.
 
