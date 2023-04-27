@@ -31,11 +31,15 @@ public class GitLabController : Controller {
 	[Route("/{filename}/{hash}/{filename2}")]
 	public async Task<ActionResult> GetSymbols([FromServices] IPdbCache pdbCache, [FromServices] IProxyConfig config, [FromRoute] string filename, [FromRoute] string hash, [FromRoute] string filename2) {
 		// We only return PDBs.
-		if (filename != filename2 || !filename.EndsWith(".pdb", StringComparison.OrdinalIgnoreCase) || !filename2.EndsWith(".pdb", StringComparison.OrdinalIgnoreCase))
+		if (filename != filename2 || !filename.EndsWith(".pdb", StringComparison.OrdinalIgnoreCase) || !filename2.EndsWith(".pdb", StringComparison.OrdinalIgnoreCase)) {
+			_logger.LogInformation("Proxy only supports simple PDB requests, ignoring.");
 			return NotFound();
+		}
 		// Check regexs.
-		if (config.SupportedPdbNames.Any() && !config.SupportedPdbNames.Any(regex => new Regex(regex).IsMatch(filename)))
+		if (config.SupportedPdbNames.Any() && !config.SupportedPdbNames.Any(regex => new Regex(regex).IsMatch(filename))) {
+			_logger.LogInformation("Request does not match supported PDB names, ignoring.");
 			return NotFound();
+		}
 		var filenameWithoutExtension = filename.Replace(".pdb", string.Empty, StringComparison.OrdinalIgnoreCase);
 		// We need to find the snupkg that matches the name in the pdbRequest.
 		// We might already have it!
