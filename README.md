@@ -27,7 +27,7 @@ When a request arrives (e.g. for `Foo.Bar.pdb`):
 2. Run the build command (you can specify a different image tag if you wish):
 
 ```
-docker build -t GitLabSymbolServerProxy .
+docker build -t gitlabsymbolserverproxy .
 ```
 
 > You can add `--build-arg version=n.n.n.n` to set the version numbers in the built files, otherwise they will have a default version of 1.0.0.0.
@@ -51,7 +51,7 @@ docker run -v ${PWD}/:/GitLabSymbolServerProxy mcr.microsoft.com/dotnet/sdk /bin
 Assuming you have used the suggested tag, you can run your built image with this command (mapped port numbers can obviously be changed if you wish):
 
 ```
-docker run -dit -p 5043:80 -p 5044:443 GitLabSymbolServerProxy
+docker run -dit -p 5043:80 -p 5044:443 gitlabsymbolserverproxy
 ```
 
 > See the upcoming 'Usage' section for available arguments.
