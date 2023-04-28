@@ -14,8 +14,13 @@ public class Startup {
 	// This method gets called by the runtime. Use this method to add services to the container.
 	public void ConfigureServices(IServiceCollection services) {
 		var proxyConfig = new ProxyConfig(Configuration);
+		var pdbStore = new FileSystemSymbolStore(proxyConfig);
+		var pdbCache = new SymbolCache(pdbStore);
+
 		services.AddSingleton<IProxyConfig>(proxyConfig);
-		services.AddSingleton<IPdbCache>(new PdbCache(proxyConfig.CacheRootPath));
+		services.AddSingleton<ISymbolStore>(pdbStore);
+		services.AddSingleton<ISymbolCache>(pdbCache);
+		services.AddScoped<ISnupkgSource, GitLabSnupkgSource>();
 
 		services.AddHttpClient<IGitLabClient, GitLabClient>(client => {
 			client.BaseAddress = new Uri(proxyConfig.GitLabHostOrigin);
@@ -30,7 +35,7 @@ public class Startup {
 	}
 
 	// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-	public void Configure(IApplicationBuilder app, ILoggerFactory loggerFactory) {
+	public void Configure(IApplicationBuilder app) {
 		app.UseHttpExceptions();
 		app.UseRouting();
 		if (IsDevelopment)
