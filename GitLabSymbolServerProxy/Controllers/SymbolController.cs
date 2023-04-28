@@ -40,17 +40,17 @@ public class SymbolController : Controller {
 	) {
 		// We only return PDBs.
 		if (filename != filename2 || !filename.EndsWith(PdbExtension, StringComparison.OrdinalIgnoreCase) || !filename2.EndsWith(PdbExtension, StringComparison.OrdinalIgnoreCase)) {
-			_logger.LogInformation("Proxy only supports simple PDB requests, ignoring request.");
+			_logger.LogInformation("Proxy only supports simple PDB requests, ignoring request for '{FirstFilename}/{SecondFilename}'.", filename, filename2);
 			return NotFound();
 		}
 
 		// Check regexs.
 		if (config.SupportedPdbNames.Any() && !config.SupportedPdbNames.Any(regex => new Regex(regex).IsMatch(filename))) {
-			_logger.LogInformation("Request does not match supported PDB names, ignoring.");
+			_logger.LogInformation("Request for '{Filename}' does not match supported PDB names, ignoring.", filename);
 			return NotFound();
 		}
 
-		// We need to find the snupkg that matches the name in the pdbRequest.
+		// We need to find the snupkg that matches the name in the request.
 		// We might already have it!
 		var filenameWithoutExtension = filename.Replace(PdbExtension, string.Empty, StringComparison.OrdinalIgnoreCase);
 		var pdbStream = await pdbCache.GetPdb(filename, hash);
@@ -59,10 +59,11 @@ public class SymbolController : Controller {
 			_logger.LogInformation("We don't already have {Filename}, so looking in our snupkg source ...", filename);
 			var snupkgs = (await snupkgSource.GetSnupkgs(filenameWithoutExtension))
 				// If we've already seen this snupkg, no point in processing it.
-				.Filter(snupkg => !pdbCache.IsSnupkgKnown(snupkg));
+				.Filter(snupkg => !pdbCache.IsSnupkgKnown(snupkg))
+				.ToList();
+			_logger.LogDebug("Found {PackageFileCount} snupkg files in packages that matched the name {Name} ... now downloading them.", snupkgs.Count, filenameWithoutExtension);
 			var snupkgStreams = (await snupkgSource.GetSnupkgStreams(snupkgs)).ToList();
 			try {
-				_logger.LogDebug("Found {PackageFileCount} snupkg files in packages that matched the name {Name}, now extracting PDBs ...", snupkgStreams.Count, filenameWithoutExtension);
 				// Open up the snupkgs and get all the PDBs that they contain.
 				var pdbStreams = (await snupkgStreams.Map(async s => await s.GetPdbStreams()).TraverseParallel(x => x)).SelectMany(x => x).ToList();
 				try {
