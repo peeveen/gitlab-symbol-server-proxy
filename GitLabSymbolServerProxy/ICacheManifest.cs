@@ -2,7 +2,7 @@ namespace GitLabSymbolServerProxy;
 
 public interface ICacheManifest {
 	void Clear();
-	bool HasSnupkg(string hash);
+	bool HasSnupkg(ISnupkgDescriptor snupkg);
 	void AddPdbs(IEnumerable<PdbStream> pdbs);
-	void AddSnupkgs(IEnumerable<SnupkgStream> snupkgs);
+	void AddSnupkgs(IEnumerable<ISnupkgDescriptor> snupkgs);
 }

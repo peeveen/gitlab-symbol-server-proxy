@@ -67,10 +67,3 @@ public class FileSystemPdbStore : IPdbStore {
 		return file.OpenRead() as Stream;
 	});
 }
-
-
-/*
-				if (!IsPdbKnown(name, pdbHash, out var hashMaps)) {
-					// If not, better download it.
-				}
-*/

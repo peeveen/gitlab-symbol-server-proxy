@@ -24,13 +24,13 @@ public class GitLabClient : IGitLabClient {
 		_config = config;
 	}
 
-	public async Task<Try<IEnumerable<GitLabSymbolPackage>>> GetPackageFilesFromPackages(int packageId, string packageName, string packageVersion, int projectId) {
+	public async Task<Try<IEnumerable<GitLabSnupkgDescriptor>>> GetPackageFilesFromPackages(int packageId, string packageName, string packageVersion, int projectId) {
 		var getGroupPackagesUri = new Uri(new Uri(_config.GitLabHostOrigin), $"api/v4/projects/{projectId}/packages/{packageId}/package_files");
 		var packageFiles = await ExecutePaginatedRequest<GitLabPackageFile>(getGroupPackagesUri, _config.PersonalAccessToken);
-		return packageFiles.Map(fs => fs.Map(f => new GitLabSymbolPackage(projectId, packageId, f.Id, packageName, packageVersion, f.Filename!)).Filter(f => f.Filename.EndsWith(".snupkg")));
+		return packageFiles.Map(fs => fs.Map(f => new GitLabSnupkgDescriptor(packageName, f.Filename!, packageVersion, projectId, packageId, f.Id)).Filter(f => f.Filename.EndsWith(".snupkg")));
 	}
 
-	public async Task<Try<IEnumerable<GitLabSymbolPackage>>> GetSnupkgFilesFromGroup(string name, int groupId) =>
+	public async Task<Try<IEnumerable<GitLabSnupkgDescriptor>>> GetSnupkgFilesFromGroup(string name, int groupId) =>
 		await TryAsync(async () => {
 			var getGroupPackagesUri = new Uri(new Uri(_config.GitLabHostOrigin), $"api/v4/groups/{groupId}/packages?package_type=nuget&status=default&package_name={name.Replace(".pdb", string.Empty, StringComparison.OrdinalIgnoreCase)}");
 			var packages = await ExecutePaginatedRequest<GitLabPackage>(getGroupPackagesUri, _config.PersonalAccessToken).IfFailThrow();
@@ -39,7 +39,7 @@ public class GitLabClient : IGitLabClient {
 			return packageFiles;
 		});
 
-	public async Task<IEnumerable<GitLabSymbolPackage>> GetSnupkgsByName(string name) {
+	public async Task<IEnumerable<ISnupkgDescriptor>> GetSnupkgsByName(string name) {
 		// Get all top-level groups.
 		var getTopLevelGroupsRequestUri = new Uri(new Uri(_config.GitLabHostOrigin), "api/v4/groups?top_level_only=true");
 		var groups = await ExecutePaginatedRequest<GitLabGroup>(getTopLevelGroupsRequestUri, _config.PersonalAccessToken).IfFailThrow();
@@ -48,10 +48,10 @@ public class GitLabClient : IGitLabClient {
 		return packageFiles;
 	}
 
-	public async Task<SnupkgStream> GetSnupkgStream(string projectId, string packageName, string packageVersion, string packageFilename) {
-		var downloadNuGetPackageUri = new Uri(new Uri(_config.GitLabHostOrigin), $"api/v4/projects/{projectId}/packages/nuget/download/{packageName}/{packageVersion}/{packageFilename}");
+	public async Task<SnupkgStream> GetSnupkgStream(GitLabSnupkgDescriptor snupkg) {
+		var downloadNuGetPackageUri = new Uri(new Uri(_config.GitLabHostOrigin), $"api/v4/projects/{snupkg.ProjectId}/packages/nuget/download/{snupkg.PackageName}/{snupkg.Version}/{snupkg.Filename}");
 		var response = await MakeApiRequest(HttpMethod.Get, downloadNuGetPackageUri, _config.PersonalAccessToken, _config.UserName);
-		return new SnupkgStream(await response.Content.ReadAsStreamAsync(), packageFilename, packageName, packageVersion);
+		return new SnupkgStream(await response.Content.ReadAsStreamAsync());
 	}
 
 	private static string Base64Encode(string str) => Convert.ToBase64String(Encoding.UTF8.GetBytes(str));

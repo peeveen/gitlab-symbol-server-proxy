@@ -57,21 +57,21 @@ public class SymbolController : Controller {
 		if (pdbStream.IsNone) {
 			// Oh well, we don't have it ... better go hunting for snupkgs.
 			_logger.LogInformation("We don't already have {Filename}, so looking in our snupkg source ...", filename);
-			var snupkgStreams = (await snupkgSource.GetSnupkgs(filenameWithoutExtension))
+			var snupkgs = (await snupkgSource.GetSnupkgs(filenameWithoutExtension))
 				// If we've already seen this snupkg, no point in processing it.
-				.Filter(snupkg => !pdbCache.IsSnupkgKnown(snupkg))
-				.ToList();
+				.Filter(snupkg => !pdbCache.IsSnupkgKnown(snupkg));
+			var snupkgStreams = (await snupkgSource.GetSnupkgStreams(snupkgs)).ToList();
 			try {
 				_logger.LogDebug("Found {PackageFileCount} snupkg files in packages that matched the name {Name}, now extracting PDBs ...", snupkgStreams.Count, filenameWithoutExtension);
 				// Open up the snupkgs and get all the PDBs that they contain.
-				var pdbStreams = (await snupkgStreams.Map(async s => await s.GetPdbs()).TraverseParallel(x => x)).SelectMany(x => x).ToList();
+				var pdbStreams = (await snupkgStreams.Map(async s => await s.GetPdbStreams()).TraverseParallel(x => x)).SelectMany(x => x).ToList();
 				try {
 					_logger.LogDebug("Extracted {PdbCount} PDB files, now storing them in the cache ...", pdbStreams.Count);
 					// Store the PDBs from the snupkgs somewhere persistent.
 					await pdbCache.StorePdbs(pdbStreams);
-					// Now that we've stored the PDBs from the snupkgs, register the snupkg content hashes so that
+					// Now that we've stored the PDBs from the snupkgs, register the snupkgs so that
 					// we don't bother processing them again.
-					pdbCache.RegisterSnupkgs(snupkgStreams);
+					pdbCache.RegisterSnupkgs(snupkgs);
 				} finally {
 					pdbStreams.ForEach(stream => stream.Dispose());
 				}

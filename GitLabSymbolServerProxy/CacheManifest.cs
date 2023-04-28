@@ -1,14 +1,15 @@
-using LanguageExt;
+using StringHashSet = System.Collections.Generic.HashSet<string>;
 
 namespace GitLabSymbolServerProxy;
 
 public class CacheManifest : ICacheManifest {
 	// Language-Ext has better collections, but these are more easily JSON-serializable.
-	public ISet<string> KnownSnupkgHashes { get; set; } = new System.Collections.Generic.HashSet<string>();
-	public ISet<string> KnownPdbHashes { get; set; } = new System.Collections.Generic.HashSet<string>();
+	public StringHashSet KnownSnupkgs { get; set; } = new StringHashSet();
+	public StringHashSet KnownPdbHashes { get; set; } = new StringHashSet();
 	private readonly object _cacheLock = new();
 
 	private static string MakePdbKey(string name, string hash) => $"{name}/{hash}";
+	private static string MakeSnupkgKey(ISnupkgDescriptor snupkg) => $"{snupkg.PackageName},{snupkg.Version}";
 
 	public void AddPdbs(IEnumerable<PdbStream> pdbs) {
 		lock (_cacheLock) {
@@ -17,23 +18,23 @@ public class CacheManifest : ICacheManifest {
 		}
 	}
 
-	public void AddSnupkgs(IEnumerable<SnupkgStream> snupkgs) {
+	public void AddSnupkgs(IEnumerable<ISnupkgDescriptor> snupkgs) {
 		lock (_cacheLock) {
 			foreach (var snupkg in snupkgs)
-				KnownSnupkgHashes.Add(snupkg.SnupkgHash);
+				KnownSnupkgs.Add(MakeSnupkgKey(snupkg));
 		}
 	}
 
 	public void Clear() {
 		lock (_cacheLock) {
-			KnownPdbHashes = new System.Collections.Generic.HashSet<string>();
-			KnownSnupkgHashes = new System.Collections.Generic.HashSet<string>();
+			KnownPdbHashes = new StringHashSet();
+			KnownSnupkgs = new StringHashSet();
 		}
 	}
 
-	public bool HasSnupkg(string hash) {
+	public bool HasSnupkg(ISnupkgDescriptor snupkg) {
 		lock (_cacheLock) {
-			return KnownSnupkgHashes.Contains(hash);
+			return KnownSnupkgs.Contains(MakeSnupkgKey(snupkg));
 		}
 	}
 }

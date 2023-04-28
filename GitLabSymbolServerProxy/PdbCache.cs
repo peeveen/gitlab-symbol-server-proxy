@@ -24,7 +24,7 @@ public class PdbCache : IPdbCache {
 		await _pdbStore.StoreCacheManifest(_cacheManifest);
 	}
 
-	public bool IsSnupkgKnown(SnupkgStream snupkgStream) => _cacheManifest.HasSnupkg(snupkgStream.SnupkgHash);
+	public bool IsSnupkgKnown(ISnupkgDescriptor snupkg) => _cacheManifest.HasSnupkg(snupkg);
 
-	public void RegisterSnupkgs(IEnumerable<SnupkgStream> snupkgs) => _cacheManifest.AddSnupkgs(snupkgs);
+	public void RegisterSnupkgs(IEnumerable<ISnupkgDescriptor> snupkgs) => _cacheManifest.AddSnupkgs(snupkgs);
 }

@@ -1,5 +1,6 @@
 namespace GitLabSymbolServerProxy;
 
 public interface ISnupkgSource {
-	Task<IEnumerable<SnupkgStream>> GetSnupkgs(string name);
+	Task<IEnumerable<ISnupkgDescriptor>> GetSnupkgs(string name);
+	Task<IEnumerable<SnupkgStream>> GetSnupkgStreams(IEnumerable<ISnupkgDescriptor> snupkgs);
 }
