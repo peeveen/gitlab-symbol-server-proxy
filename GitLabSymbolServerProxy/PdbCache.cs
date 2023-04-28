@@ -20,7 +20,6 @@ public class PdbCache : IPdbCache {
 
 	public async Task StorePdbs(IEnumerable<PdbStream> pdbs) {
 		await _pdbStore.StorePdbs(pdbs);
-		_cacheManifest.AddPdbs(pdbs);
 		await _pdbStore.StoreCacheManifest(_cacheManifest);
 	}
 
