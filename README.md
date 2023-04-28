@@ -74,7 +74,7 @@ Arguments specific to this app are:
 
 - `GitLabHostOrigin`: _(required)_ The origin of the GitLab host (e.g. https://gitlab.yourdomain.com)
 - `PersonalAccessToken`: _(required)_ A personal access token that will be used to access the package registries. This token must have at least `read_api` scope.
-- `UserName`: _(required)_ The name of the user that the access token is associated with. This is needed because the authentication on the GitLab NuGet API requires a username to provided.
+- `UserName`: _(required)_ The name of the user that the access token is associated with. This is needed because the authentication on the GitLab NuGet API requires a username to be provided.
 - `CacheRootPath`: _(required)_ Path where downloaded PDBs will be cached. If this path does not exist, it will be created, if possible.
 - `SupportedPdbNames`: _(optional)_ A collection of regular expressions. Any request for a PDB that does not match any of these regular expressions will be ignored (a 404 response will be returned to Visual Studio). This allows your proxy to save time by not searching GitLab for packages that you definitely won't have.
 
