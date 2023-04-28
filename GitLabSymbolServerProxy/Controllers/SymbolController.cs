@@ -31,7 +31,8 @@ public class SymbolController : Controller {
 	[HttpGet]
 	[Route("/{filename}/{hash}/{filename2}")]
 	public async Task<ActionResult> GetSymbols(
-		[FromServices] IPdbCache pdbCache,
+		[FromServices] ISymbolCache symbolCache,
+		[FromServices] ISymbolStore symbolStore,
 		[FromServices] IProxyConfig config,
 		[FromServices] ISnupkgSource snupkgSource,
 		[FromRoute] string filename,
@@ -53,13 +54,13 @@ public class SymbolController : Controller {
 		// We need to find the snupkg that matches the name in the request.
 		// We might already have it!
 		var filenameWithoutExtension = filename.Replace(PdbExtension, string.Empty, StringComparison.OrdinalIgnoreCase);
-		var pdbStream = await pdbCache.GetPdb(filename, hash);
+		var pdbStream = await symbolStore.GetPdbStream(filename, hash);
 		if (pdbStream.IsNone) {
 			// Oh well, we don't have it ... better go hunting for snupkgs.
 			_logger.LogInformation("We don't already have {Filename}, so looking in our snupkg source ...", filename);
 			var snupkgs = (await snupkgSource.GetSnupkgs(filenameWithoutExtension))
 				// If we've already seen this snupkg, no point in processing it.
-				.Filter(snupkg => !pdbCache.IsSnupkgKnown(snupkg))
+				.Filter(snupkg => !symbolCache.IsSnupkgKnown(snupkg))
 				.ToList();
 			_logger.LogDebug("Found {PackageFileCount} snupkg files in packages that matched the name {Name} ... now downloading them.", snupkgs.Count, filenameWithoutExtension);
 			var snupkgStreams = (await snupkgSource.GetSnupkgStreams(snupkgs)).ToList();
@@ -69,10 +70,10 @@ public class SymbolController : Controller {
 				try {
 					_logger.LogDebug("Extracted {PdbCount} PDB files, now storing them in the cache ...", pdbStreams.Count);
 					// Store the PDBs from the snupkgs somewhere persistent.
-					await pdbCache.StorePdbs(pdbStreams);
+					await symbolStore.StorePdbs(pdbStreams);
 					// Now that we've stored the PDBs from the snupkgs, register the snupkgs so that
 					// we don't bother processing them again.
-					pdbCache.RegisterSnupkgs(snupkgs);
+					await symbolCache.AddSnupkgs(snupkgs);
 				} finally {
 					pdbStreams.ForEach(stream => stream.Dispose());
 				}
@@ -81,12 +82,12 @@ public class SymbolController : Controller {
 			}
 
 			// Requery the cache for the required PDB, cos we might have it now!
-			pdbStream = await pdbCache.GetPdb(filename, hash);
+			pdbStream = await symbolStore.GetPdbStream(filename, hash);
 		}
 		return pdbStream.Match<ActionResult>(
 			Some: stream => {
 				_logger.LogInformation("Returning PDB content in response stream.");
-				return File(stream, MediaTypeNames.Application.Octet);
+				return File(stream.Stream, MediaTypeNames.Application.Octet);
 			},
 			None: () => NotFound()
 		);

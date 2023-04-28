@@ -14,11 +14,11 @@ public class Startup {
 	// This method gets called by the runtime. Use this method to add services to the container.
 	public void ConfigureServices(IServiceCollection services) {
 		var proxyConfig = new ProxyConfig(Configuration);
-		var pdbStore = new FileSystemPdbStore(proxyConfig);
-		var pdbCache = new PdbCache(pdbStore);
+		var pdbStore = new FileSystemSymbolStore(proxyConfig);
+		var pdbCache = new SymbolCache(pdbStore);
 
 		services.AddSingleton<IProxyConfig>(proxyConfig);
-		services.AddSingleton<IPdbCache>(pdbCache);
+		services.AddSingleton<ISymbolCache>(pdbCache);
 
 		services.AddHttpClient<IGitLabClient, GitLabClient>(client => {
 			client.BaseAddress = new Uri(proxyConfig.GitLabHostOrigin);
