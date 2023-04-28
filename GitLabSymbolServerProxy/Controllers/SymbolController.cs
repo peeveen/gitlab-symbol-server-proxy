@@ -40,7 +40,7 @@ public class SymbolController : Controller {
 	) {
 		// We only return PDBs.
 		if (filename != filename2 || !filename.EndsWith(PdbExtension, StringComparison.OrdinalIgnoreCase) || !filename2.EndsWith(PdbExtension, StringComparison.OrdinalIgnoreCase)) {
-			_logger.LogInformation("Proxy only supports simple PDB requests, ignoring.");
+			_logger.LogInformation("Proxy only supports simple PDB requests, ignoring request.");
 			return NotFound();
 		}
 
