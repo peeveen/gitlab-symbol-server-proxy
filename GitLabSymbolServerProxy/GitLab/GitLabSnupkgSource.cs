@@ -11,11 +11,8 @@ public class GitLabSnupkgSource : ISnupkgSource {
 		_logger = loggerFactory.CreateLogger<GitLabSnupkgSource>();
 	}
 
-	public async Task<IEnumerable<ISnupkgDescriptor>> GetSnupkgs(string name) {
-		var snupkgs = (await _gitLabClient.GetSnupkgsByName(name)).ToList();
-		_logger.LogDebug("Found {PackageFileCount} snupkg files in packages that matched the name {Name} ...", snupkgs.Count, name);
-		return snupkgs;
-	}
+	public async Task<IEnumerable<ISnupkgDescriptor>> GetSnupkgs(string name) =>
+		await _gitLabClient.GetSnupkgsByName(name);
 
 	public async Task<IEnumerable<SnupkgStream>> GetSnupkgStreams(IEnumerable<ISnupkgDescriptor> snupkgs) {
 		var gitLabSnupkgs = snupkgs.Cast<GitLabSnupkgDescriptor>();

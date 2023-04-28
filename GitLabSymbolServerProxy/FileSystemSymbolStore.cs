@@ -22,7 +22,7 @@ public class FileSystemSymbolStore : ISymbolStore {
 
 	public async Task StorePdbs(IEnumerable<PdbStream> pdbs) {
 		foreach (var pdb in pdbs) {
-			var path = GetPdbPath(pdb.Filename, pdb.PdbHash);
+			var path = GetPdbPath(pdb.Filename, pdb.GetPdbHash());
 			var fileToCreate = new FileInfo(path);
 			fileToCreate.Directory?.Create();
 			using var outFileStream = fileToCreate.Create();

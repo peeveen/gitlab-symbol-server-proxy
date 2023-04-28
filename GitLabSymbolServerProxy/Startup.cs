@@ -18,7 +18,9 @@ public class Startup {
 		var pdbCache = new SymbolCache(pdbStore);
 
 		services.AddSingleton<IProxyConfig>(proxyConfig);
+		services.AddSingleton<ISymbolStore>(pdbStore);
 		services.AddSingleton<ISymbolCache>(pdbCache);
+		services.AddScoped<ISnupkgSource, GitLabSnupkgSource>();
 
 		services.AddHttpClient<IGitLabClient, GitLabClient>(client => {
 			client.BaseAddress = new Uri(proxyConfig.GitLabHostOrigin);

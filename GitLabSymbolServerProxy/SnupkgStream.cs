@@ -1,5 +1,4 @@
 using System.IO.Compression;
-using System.Security.Cryptography;
 using LanguageExt;
 
 namespace GitLabSymbolServerProxy;
@@ -10,7 +9,7 @@ public sealed class SnupkgStream : IDisposable {
 	}
 
 	public async Task<IEnumerable<PdbStream>> GetPdbStreams() {
-		if (PdbStreams == null) {
+		if (!_pdbStreamsRead) {
 			// Open the snupkg (it's a zip file, basically)
 			using var zip = new ZipArchive(Stream);
 			// Look for any PDB files.
@@ -23,6 +22,7 @@ public sealed class SnupkgStream : IDisposable {
 				return new PdbStream(pdbByteStream, pdbEntry.Name);
 			})).TraverseParallel(x => x);
 			PdbStreams = pdbStreams;
+			_pdbStreamsRead = true;
 		}
 		return PdbStreams;
 	}
@@ -34,4 +34,5 @@ public sealed class SnupkgStream : IDisposable {
 
 	public Stream Stream { get; }
 	private IEnumerable<PdbStream> PdbStreams { get; set; } = Array.Empty<PdbStream>();
+	private bool _pdbStreamsRead = false;
 }
