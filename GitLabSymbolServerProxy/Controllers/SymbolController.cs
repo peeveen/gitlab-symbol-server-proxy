@@ -11,12 +11,45 @@ namespace GitLabSymbolServerProxy.Controllers;
 [Route("/")]
 public class SymbolController : Controller {
 	private const string PdbExtension = ".pdb";
+	private const string FaviconFilename = "favicon.png";
+
+	private static readonly byte[]? _favicon = GetEmbeddedResourceBytes(typeof(Program).GetTypeInfo().Assembly, FaviconFilename);
 
 	private readonly ILogger _logger;
+
+	/// <summary>
+	/// Obtains an embedded resource stream from the given assembly.
+	/// </summary>
+	/// <param name="assembly">Assembly to find the resource in.</param>
+	/// <param name="resourceName">Name of resource.</param>
+	/// <returns>Stream, or null if not found.</returns>
+	public static Stream? GetEmbeddedResourceStream(Assembly assembly, string resourceName) =>
+		assembly.GetManifestResourceStream($"{assembly.GetName().Name}.{resourceName}");
+
+	/// <summary>
+	/// Obtains an embedded resource from the given assembly, as bytes.
+	/// </summary>
+	/// <param name="assembly">Assembly to find the resource in.</param>
+	/// <param name="resourceName">Name of resource.</param>
+	/// <returns>Bytes, or null if not found.</returns>
+	[SuppressMessage("csharp", "S1168")]
+	public static byte[]? GetEmbeddedResourceBytes(Assembly assembly, string resourceName) {
+		using var resourceStream = GetEmbeddedResourceStream(assembly, resourceName);
+		if (resourceStream == null) return null;
+		var resourceBytes = new byte[resourceStream.Length];
+		using var memStream = new MemoryStream(resourceBytes, true);
+		resourceStream.CopyTo(memStream);
+		return resourceBytes;
+	}
 
 	public SymbolController(ILoggerFactory loggerFactory) {
 		_logger = loggerFactory.CreateLogger<SymbolController>();
 	}
+
+	[HttpGet]
+	[Route("/favicon.ico")]
+	[SuppressMessage("csharp", "CA1822")]
+	public IActionResult GetIcon() => _favicon == null ? new NotFoundResult() : new FileContentResult(_favicon, MediaTypeNames.Application.Octet);
 
 	[HttpGet]
 	[Route("/version")]
