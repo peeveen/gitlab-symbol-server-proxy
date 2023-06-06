@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 namespace GitLabSymbolServerProxy;
 
 // Interface for our configuration object.
@@ -6,5 +8,5 @@ public interface IProxyConfig {
 	string PersonalAccessToken { get; }
 	string UserName { get; }
 	string CacheRootPath { get; }
-	string[] SupportedPdbNames { get; }
+	Regex[] SupportedPdbRegexs { get; }
 }

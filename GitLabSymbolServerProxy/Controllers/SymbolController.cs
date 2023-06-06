@@ -79,7 +79,7 @@ public class SymbolController : Controller {
 		}
 
 		// Check regexs.
-		if (config.SupportedPdbNames.Any() && !config.SupportedPdbNames.Any(regex => new Regex(regex).IsMatch(filename))) {
+		if (config.SupportedPdbRegexs.Any() && !config.SupportedPdbRegexs.Any(regex => regex.IsMatch(filename))) {
 			_logger.LogInformation("Request for '{Filename}' does not match supported PDB names, ignoring.", filename);
 			return NotFound();
 		}

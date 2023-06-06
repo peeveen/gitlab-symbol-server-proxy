@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 namespace GitLabSymbolServerProxy;
 
 // Configuration object, holds the values of arguments supplied on the command line.
@@ -19,7 +21,7 @@ public class ProxyConfig : IProxyConfig {
 		PersonalAccessToken = getArgument(PersonalAccessTokenArgumentName);
 		CacheRootPath = getArgument(CacheRootPathArgumentName);
 		UserName = getArgument(UserNameArgumentName);
-		SupportedPdbNames = configuration.GetSection(SupportedPdbNamesArgumentName).Get<string[]>();
+		SupportedPdbRegexs = configuration.GetSection(SupportedPdbNamesArgumentName).Get<string[]>().Map(s => new Regex(s)).ToArray();
 		validateArgument(GitLabHostOriginArgumentName, GitLabHostOrigin);
 		validateArgument(PersonalAccessTokenArgumentName, PersonalAccessToken);
 		validateArgument(CacheRootPathArgumentName, CacheRootPath);
@@ -30,5 +32,5 @@ public class ProxyConfig : IProxyConfig {
 	public string PersonalAccessToken { get; }
 	public string CacheRootPath { get; }
 	public string UserName { get; }
-	public string[] SupportedPdbNames { get; }
+	public Regex[] SupportedPdbRegexs { get; }
 }
