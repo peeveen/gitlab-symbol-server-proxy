@@ -46,9 +46,21 @@ public static class KestrelServerOptionsExtensions {
 				return endpoint;
 			});
 
-		foreach (var endpoint in endpoints.Values) {
+		static int getPort(string? port, string scheme) {
+			var schemePort = scheme == EndpointConfiguration.HttpsScheme ? 443 : 80;
+			if (int.TryParse(port, out var parsedPort))
+				return parsedPort;
+			if (!string.IsNullOrEmpty(port)) {
+				var envPort = Environment.GetEnvironmentVariable(port);
+				if (int.TryParse(envPort, out parsedPort))
+					return parsedPort;
+			}
+			return schemePort;
+		}
+
+		foreach (var endpoint in endpoints.Values.Where(endpoint => endpoint.Enabled)) {
 			var config = endpoint;
-			var port = config.Port ?? (config.Scheme == EndpointConfiguration.HttpsScheme ? 443 : 80);
+			var port = getPort(config.Port, config.Scheme);
 			static IReadOnlyCollection<IPAddress> getIPAddresses(string host) {
 				if (host == EndpointConfiguration.LocalHost)
 					return new[] { IPAddress.IPv6Loopback, IPAddress.Loopback };
@@ -59,12 +71,13 @@ public static class KestrelServerOptionsExtensions {
 
 			foreach (var address in getIPAddresses(config.Host))
 				options.Listen(address, port,
-						listenOptions => {
-							if (config.Scheme == "https") {
-								var certificate = LoadCertificate(config, environment);
-								listenOptions.UseHttps(certificate);
-							}
-						});
+					listenOptions => {
+						if (config.Scheme == "https") {
+							var certificate = LoadCertificate(config, environment);
+							listenOptions.UseHttps(certificate);
+						}
+					}
+				);
 		}
 	}
 
@@ -90,12 +103,13 @@ public static class KestrelServerOptionsExtensions {
 }
 
 public class EndpointConfiguration {
-	public const string LocalHost = "localhost";
+	public const string LocalHost = "0.0.0.0";
 	public const string HttpScheme = "http";
 	public const string HttpsScheme = "https";
 
 	public string Host { get; set; } = LocalHost;
-	public int? Port { get; set; }
+	public bool Enabled { get; set; } = true;
+	public string? Port { get; set; }
 	public string Scheme { get; set; } = HttpScheme;
 	public string? StoreName { get; set; }
 	public string? StoreLocation { get; set; }
