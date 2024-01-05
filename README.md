@@ -1,3 +1,5 @@
+# GITLAB 16.7 HAS ADDED SYMBOL SERVER FUNCTIONALITY, SO YOU PROBABLY WON'T NEED THIS
+
 # GitLab symbol server proxy
 
 [Available from DockerHub](https://hub.docker.com/r/peeveen/gitlabsymbolserverproxy)
